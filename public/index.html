@@ -10,6 +10,7 @@
 
 <body>
     <h1>Heyyyyy</h1>
+    <p id="alertBox"></p>
 
     <div id="messageBox">
 
@@ -18,6 +19,7 @@
     <label for="roomCode">Room Code</label>
     <input type="text" id="roomCode" />
     <button onclick="createRoom()">Create Room</button>
+    <button onclick="joinRoom()">Join Room</button>
 
     <form id="form">
         <input type="text" id="message" />
@@ -27,18 +29,21 @@
     <script>
 
         async function createRoom() {
-            let roomCode = document.getElementById('roomCode').value
-            let data = await fetch(`http://localhost:8080/create/${roomCode}`, {
-                method: "POST",
-            })
+            const options = {
+                method: 'POST',
+                mode: 'no-cors'
+            };
 
-            let json = await data.json()
-            joinRoom(roomCode);
+            let roomCode = document.getElementById('roomCode').value
+            let data = await fetch(`http://localhost:8080/create/${roomCode}`, options)
+
+            joinRoom();
         }
 
-        function joinRoom(roomCode) {
+        function joinRoom() {
+            roomCode = document.getElementById('roomCode').value
             console.log("joining");
-            var socket = new WebSocket(`ws://localhost:8080/ws?room=${roomCode}`);
+            var socket = new WebSocket(`ws://127.0.0.1:8080/ws/${roomCode}`);
 
             socket.onmessage = (event) => {
                 let messages = event.data.split('\n');
@@ -51,10 +56,11 @@
 
             socket.onopen = (event) => {
                 console.log("WebSocket Open")
+                document.getElementById('alertBox').innerHTML = "Connected to room " + roomCode
             }
 
             document.getElementById('form').onsubmit = (event) => {
-                console.log("sending screggage")
+                console.log("sending message")
                 event.preventDefault()
 
                 if (!socket) return;

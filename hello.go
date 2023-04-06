@@ -186,9 +186,9 @@ func main() {
 		return c.SendStatus(200)
 	})
 
-	app.Get("/ws", websocket.New(func(c *websocket.Conn) {
-		roomName := c.Query("room")
-		fmt.Println("Room: ", roomName)
+	app.Get("/ws/:room", websocket.New(func(c *websocket.Conn) {
+		roomName := c.Params("room")
+		fmt.Println("Joining Room: ", roomName)
 
 		var currentRoom *Room
 		for _, r := range rooms {
