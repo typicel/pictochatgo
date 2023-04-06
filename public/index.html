@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Greeble Chat</title>
 </head>
 
 <body>
@@ -15,37 +15,55 @@
 
     </div>
 
+    <label for="roomCode">Room Code</label>
+    <input type="text" id="roomCode" />
+    <button onclick="createRoom()">Create Room</button>
+
     <form id="form">
         <input type="text" id="message" />
         <button type="submit">Gorble</button>
     </form>
 
-
     <script>
-        var socket = new WebSocket("ws://127.0.0.1:8080/ws");
 
-        socket.onmessage = (event) => {
-            let messages = event.data.split('\n');
-            for (let i = 0; i < messages.length; i++) {
-                let item = document.createElement('div')
-                item.innerText = messages[i]
-                messageBox.appendChild(item)
+        async function createRoom() {
+            let roomCode = document.getElementById('roomCode').value
+            let data = await fetch(`http://localhost:8080/create/${roomCode}`, {
+                method: "POST",
+            })
+
+            let json = await data.json()
+            joinRoom(roomCode);
+        }
+
+        function joinRoom(roomCode) {
+            console.log("joining");
+            var socket = new WebSocket(`ws://localhost:8080/ws?room=${roomCode}`);
+
+            socket.onmessage = (event) => {
+                let messages = event.data.split('\n');
+                for (let i = 0; i < messages.length; i++) {
+                    let item = document.createElement('div')
+                    item.innerText = messages[i]
+                    messageBox.appendChild(item)
+                }
             }
-        }
 
-        socket.onopen = (event) => {
-            console.log("WebSocket Open")
-        }
+            socket.onopen = (event) => {
+                console.log("WebSocket Open")
+            }
 
-        document.getElementById('form').onsubmit = (event) => {
-            event.preventDefault()
+            document.getElementById('form').onsubmit = (event) => {
+                console.log("sending screggage")
+                event.preventDefault()
 
-            if (!socket) return;
+                if (!socket) return;
 
-            let message = document.getElementById('message').value
-            if (!message) return;
+                let message = document.getElementById('message').value
+                if (!message) return;
 
-            socket.send(message)
+                socket.send(message)
+            }
         }
     </script>
 </body>
