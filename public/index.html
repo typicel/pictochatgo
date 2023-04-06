@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Heyyyyy</h1>
+
+    <div id="messageBox">
+
+    </div>
+
+    <form id="form">
+        <input type="text" id="message" />
+        <button type="submit">Gorble</button>
+    </form>
+
+
+    <script>
+        var socket = new WebSocket("ws://127.0.0.1:8080/ws");
+
+        socket.onmessage = (event) => {
+            let messages = event.data.split('\n');
+            for (let i = 0; i < messages.length; i++) {
+                let item = document.createElement('div')
+                item.innerText = messages[i]
+                messageBox.appendChild(item)
+            }
+        }
+
+        socket.onopen = (event) => {
+            console.log("WebSocket Open")
+        }
+
+        document.getElementById('form').onsubmit = (event) => {
+            event.preventDefault()
+
+            if (!socket) return;
+
+            let message = document.getElementById('message').value
+            if (!message) return;
+
+            socket.send(message)
+        }
+    </script>
+</body>
+
+</html>
