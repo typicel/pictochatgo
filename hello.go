@@ -10,28 +10,36 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
-type client struct {
+type Client struct {
 	isClosing bool
 	mu        sync.Mutex
 }
 
-var clients = make(map[*websocket.Conn]*client)
+type Room struct {
+	Code      string
+	Clients   map[*websocket.Conn]bool
+	Broadcast chan string
+}
+
+var clients = make(map[*websocket.Conn]*Client)
 var register = make(chan *websocket.Conn)
 var broadcast = make(chan string)
 var unregister = make(chan *websocket.Conn)
+
+var rooms = make(map[string]*Room)
 
 func run() {
 	for {
 		select {
 		case connection := <-register:
-			clients[connection] = &client{}
+			clients[connection] = &Client{}
 			log.Println("mmm yummy connection!!!!")
 
 		case message := <-broadcast:
 			log.Println("full of message: ", message)
 
 			for connection, c := range clients {
-				go func(connection *websocket.Conn, c *client) {
+				go func(connection *websocket.Conn, c *Client) {
 					c.mu.Lock()
 
 					defer c.mu.Unlock()
@@ -59,6 +67,80 @@ func run() {
 	}
 }
 
+func handleWebSocket(c *websocket.Conn) {
+	defer func() {
+		unregister <- c
+		c.Close()
+	}()
+
+	register <- c
+
+	for {
+		messageType, message, err := c.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Println("Something went wrong: ", err)
+			}
+
+			return
+		}
+
+		if messageType == websocket.TextMessage {
+			fmt.Println("Message received")
+			broadcast <- string(message)
+		} else {
+			log.Println("Unknown message type: ", messageType)
+		}
+
+	}
+}
+
+func createRoom(c *fiber.Ctx) error {
+	roomCode := c.Params("room")
+	room := &Room{
+		Code:      roomCode,
+		Clients:   make(map[*websocket.Conn]bool),
+		Broadcast: make(chan string),
+	}
+
+	rooms[roomCode] = room
+	return c.SendString("room created")
+}
+
+func joinRoom(c *fiber.Ctx) error {
+	code := c.Params("code")
+
+	room, exists := rooms[code]
+	if !exists {
+		return c.Status(404).SendString("No Room with given code")
+	}
+
+	websocket.New(func(conn *websocket.Conn) {
+		defer func() {
+			unregister <- conn
+			conn.Close()
+		}()
+
+		for {
+			messageType, message, err := conn.ReadMessage()
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					log.Println("Something went wrong: ", err)
+				}
+				return
+			}
+
+			if messageType == websocket.TextMessage {
+				room.Broadcast <- string(message)
+			}
+
+		}
+
+	})
+
+	return nil
+}
+
 func main() {
 	app := fiber.New()
 
@@ -73,33 +155,9 @@ func main() {
 
 	go run()
 
-	app.Get("/ws", websocket.New(func(c *websocket.Conn) {
-		defer func() {
-			unregister <- c
-			c.Close()
-		}()
-
-		register <- c
-
-		for {
-			messageType, message, err := c.ReadMessage()
-			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Println("guh!: ", err)
-				}
-
-				return
-			}
-
-			if messageType == websocket.TextMessage {
-				fmt.Println("wow nice message!")
-				broadcast <- string(message)
-			} else {
-				log.Println("??????????????????????", messageType)
-			}
-
-		}
-	}))
+	app.Get("/ws", websocket.New(handleWebSocket))
+	app.Post("/createRoom/:room", createRoom)
+	app.Get("/room/:code", joinRoom)
 
 	addr := flag.String("addr", ":8080", "http service address")
 	flag.Parse()
