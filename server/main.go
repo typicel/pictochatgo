@@ -162,7 +162,6 @@ var rooms []*Room
 
 func main() {
 	app := fiber.New()
-	app.Static("/", "./public")
 
 	// app.Use(func(c *fiber.Ctx) error {
 	// 	if websocket.IsWebSocketUpgrade(c) {
