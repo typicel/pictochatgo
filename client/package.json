@@ -1,13 +1,18 @@
 {
-  "source": "index.html",
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "parcel",
-    "build": "parcel build"
+    "dev": "vite --host 3000",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "lit": "^2.7.2"
+    "preact": "^10.13.0"
   },
   "devDependencies": {
-    "parcel": "^2.8.3"
+    "@preact/preset-vite": "^2.5.0",
+    "vite": "^4.2.0"
   }
 }

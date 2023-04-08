@@ -1,83 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="module" src="./components/hello.js"></script>
-    <title>Greeble Chat</title>
-</head>
-
-<body>
-    <h1>Heyyyyy</h1>
-    <p id="alertBox"></p>
-
-    <hello-world></hello-world>
-
-    <div id="messageBox">
-
-    </div>
-
-    <label for="roomCode">Room Code</label>
-    <input type="text" id="roomCode" />
-    <button onclick="createRoom()">Create Room</button>
-    <button onclick="joinRoom()">Join Room</button>
-
-    <form id="form">
-        <input type="text" id="message" />
-        <button type="submit">Gorble</button>
-    </form>
-
-    <script>
-        var socket;
-
-        async function createRoom() {
-            const options = {
-                method: 'POST',
-                mode: 'no-cors'
-            };
-
-            let roomCode = document.getElementById('roomCode').value
-            let data = await fetch(`http://localhost:8080/create/${roomCode}`, options)
-
-            joinRoom();
-        }
-
-        function joinRoom() {
-            if (socket) return;
-
-            roomCode = document.getElementById('roomCode').value
-            console.log("joining");
-            socket = new WebSocket(`ws://127.0.0.1:8080/ws/${roomCode}`);
-
-            socket.onmessage = (event) => {
-                let messages = event.data.split('\n');
-                for (let i = 0; i < messages.length; i++) {
-                    let item = document.createElement('div')
-                    item.innerText = messages[i]
-                    messageBox.appendChild(item)
-                }
-            }
-
-            socket.onopen = (event) => {
-                console.log("WebSocket Open")
-                document.getElementById('alertBox').innerHTML = "Connected to room " + roomCode
-            }
-
-            document.getElementById('form').onsubmit = (event) => {
-                console.log("sending message")
-                event.preventDefault()
-
-                if (!socket) return;
-
-                let message = document.getElementById('message').value
-                if (!message) return;
-
-                socket.send(message)
-            }
-        }
-    </script>
-</body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + Preact</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

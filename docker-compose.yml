@@ -1,15 +1,22 @@
-version: '3.8'
+version: "3.0"
 
 services:
-  backend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
+  server:
+    image: golang
+    container_name: pictochat-server
+    working_dir: /srv/app
     ports:
-      - "8080:8080"
-  frontend:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
+      - 8080:8080
+    volumes:
+      - ./server:/srv/app
+    command: "go run ."
+
+  client:
+    image: node:alpine
+    container_name: pictochat-client
     ports:
-      - "3000:1234"
+      - 3000:3000
+    working_dir: /src/app
+    volumes:
+      - ./client:/src/app
+    command: /bin/sh -c "npm install && npm run dev"
