@@ -5,15 +5,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+
     <script type="module" src="./components/hello.js"></script>
+    <script type="module" src="./components/app.js"></script>
+    <script type="module" src="./components/drawing-canvas.js"></script>
     <title>Greeble Chat</title>
 </head>
 
 <body>
-    <h1>Heyyyyy</h1>
-    <p id="alertBox"></p>
-
-    <hello-world></hello-world>
+    <my-app></my-app>
+    <drawing-canvas></drawing-canvas>
+    <!-- <p id="alertBox"></p>
 
     <div id="messageBox">
 
@@ -27,9 +30,9 @@
     <form id="form">
         <input type="text" id="message" />
         <button type="submit">Gorble</button>
-    </form>
+    </form> -->
 
-    <script>
+    <!-- <script>
         var socket;
 
         async function createRoom() {
@@ -77,7 +80,7 @@
                 socket.send(message)
             }
         }
-    </script>
+    </script> -->
 </body>
 
 </html>
